@@ -1,4 +1,4 @@
-// SERVICE WORKER
+ // SERVICE WORKER
 if ('serviceWorker' in navigator) {
     const swCode = `const CACHE_NAME='daycraft-v8';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
     const blob = new Blob([swCode], { type: 'application/javascript' });
@@ -51,6 +51,8 @@ class DayCraft {
         this.renderHistory();
         this.renderNotesPage();
         this.applySeasonalTheme();
+        // Initial FAB state
+        this.toggleFab('calendar');
     }
 
     // --- DATA MANAGEMENT (PRODUCTION READY) ---
@@ -142,9 +144,23 @@ class DayCraft {
             }
         });
 
+        // Toggle FAB visibility based on view
+        this.toggleFab(view);
+
         if(view === 'analytics') { this.renderCategoryGraph(); this.renderHeatmap(); this.renderWeeklySummary(); }
         if(view === 'tasks') { this.renderTasks(); this.renderNotesPage(); }
         if(view === 'calendar') { this.renderCalendar(); }
+    }
+
+    // Logic to show/hide the Floating Action Button
+    toggleFab(view) {
+        const fab = document.getElementById('fab-add');
+        if (view === 'calendar' || view === 'tasks') {
+            fab.classList.remove('hidden');
+            setTimeout(() => fab.classList.add('animate-bounce-short'), 100); // Small bounce to announce presence
+        } else {
+            fab.classList.add('hidden');
+        }
     }
 
     showToast(msg, isError = false) {
@@ -516,7 +532,21 @@ class DayCraft {
     openModal(type) {
         const m = document.getElementById(`${type}-modal`); const c = document.getElementById(`${type}-modal-content`);
         m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); c.classList.add('scale-100'); }, 10);
-        if(type === 'task' && !document.getElementById('task-id').value) { document.getElementById('task-modal-title').textContent = "New Task"; document.getElementById('task-form').reset(); document.getElementById('task-date').valueAsDate = new Date(); }
+        
+        // Smart date setting for FAB
+        if(type === 'task' && !document.getElementById('task-id').value) { 
+            document.getElementById('task-modal-title').textContent = "New Task"; 
+            document.getElementById('task-form').reset(); 
+            
+            // If opened from FAB and we are on Calendar View, use Selected Date
+            // If opened from FAB and we are on Tasks View, use Today
+            const dateInput = document.getElementById('task-date');
+            if(this.state.view === 'calendar') {
+                dateInput.valueAsDate = new Date(this.state.selectedDate);
+            } else {
+                dateInput.valueAsDate = new Date();
+            }
+        }
     }
     closeModal(type) {
         const m = document.getElementById(`${type}-modal`); const c = document.getElementById(`${type}-modal-content`);
