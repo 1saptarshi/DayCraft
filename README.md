@@ -114,7 +114,7 @@ DayCraft/
 
 ### 1️⃣ Clone the repository
 ```bash
-https://github.com/1saptarshi/DayCraft_Design-your-day.-Control-your-time.git
+https://github.com/1saptarshi/DayCraft.git
 ````
 
 ### 2️⃣ Open the project folder
